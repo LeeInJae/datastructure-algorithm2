@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #define DATA_MAX 100
 
 int left_binary_search(int * arr, int left, int right, int key){
@@ -59,6 +60,7 @@ int main(int argc, char ** argv){
 	}
 
 	key = 3;
+
 	leftPos = left_binary_search(arr, 0, n-1, key);
 	rightPos = right_binary_search(arr, 0, n-1, key);
 
