@@ -19,11 +19,15 @@ void insertion_sort(int * arr, int n){
 	}
 }
 
-void print_arr(int * arr, int n){
-	for (int i = 0; i < n; ++i){
-		printf("%d ", arr[i]);
+int isSorted(int * arr, int n){
+	int flag = 1;
+	for (int i = 0; i < n-1; ++i){
+		if (arr[i] > arr[i + 1]){
+			flag = 0;
+			break;
+		}
 	}
-	printf("\n");
+	return flag;
 }
 
 int main(void){
@@ -44,7 +48,7 @@ int main(void){
 	}
 
 	insertion_sort(arr, n);
-	print_arr(arr, n);
+	printf("%d\n",isSorted(arr, n));
 	free(arr);
 	getchar();
 	return 0;
