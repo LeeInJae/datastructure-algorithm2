@@ -48,6 +48,8 @@ void merge_sort(int *arr, int *bufferArr, int begin, int last){
 
 int isSorted(int *arr, int num){
 	int flag = 1;
+	char * n = (char *)NULL;
+	printf("%c", n);  
 	for (int i = 0; i < num; ++i){
 		printf("%d ", arr[i]);
 	}
