@@ -17,7 +17,7 @@ void CountingSort(int * arr, int * res, int size){
 		res[count[arr[i]]] = arr[i];
 		--count[arr[i]];
 	}
-	delete count;
+	free(count);
 }
 
 void PrintArr(int * arr, int * res, int size){
@@ -29,12 +29,12 @@ void PrintArr(int * arr, int * res, int size){
 }
 
 int main(void){
-	int arr[] = { 10, 4, 1, 2, 5, 1, 2, 3, 0, 0, 1, 3, 2 };
+	int arr[] = { 10, 4, 1, 2, 54,3,1,2,3,4 };
 	int size = sizeof(arr) / sizeof(int);
 	int * res = (int *)malloc(sizeof(int) * (size + 1));
 	CountingSort(arr, res, size);
 	PrintArr(arr, res, size);
-	delete res;
+	free(res);
 	getchar();
 	return 0;
 }
