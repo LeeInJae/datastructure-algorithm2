@@ -17,23 +17,26 @@ void CountingSort(int * arr, int * res, int size){
 		res[count[arr[i]]] = arr[i];
 		--count[arr[i]];
 	}
+	for (int i = 0; i < size; ++i){
+		arr[i] = res[i+1];
+	}
 	free(count);
 }
 
-void PrintArr(int * arr, int * res, int size){
+void PrintArr(int * arr, int size){
 	for (int i = 0; i < size; ++i)
 		printf("%d ", arr[i]);
 	printf("\n");
-	for (int i = 1; i <= size; ++i)
-		printf("%d ", res[i]);
+// 	for (int i = 1; i <= size; ++i)
+// 		printf("%d ", res[i]);
 }
 
 int main(void){
-	int arr[] = { 10, 4, 1, 2, 54,3,1,2,3,4 };
+	int arr[] = { 10, 20, 30, 401, 2, 3, 4, 5 };
 	int size = sizeof(arr) / sizeof(int);
 	int * res = (int *)malloc(sizeof(int) * (size + 1));
 	CountingSort(arr, res, size);
-	PrintArr(arr, res, size);
+	PrintArr(arr, size);
 	free(res);
 	getchar();
 	return 0;
