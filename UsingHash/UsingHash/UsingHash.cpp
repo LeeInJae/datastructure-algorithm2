@@ -11,17 +11,15 @@ struct Student{
 	unsigned int age;
 };
 
-void StudentInformationInit(map<string, Student *> & StudentInfo, int studentNum){
-	Student * studentArr = new Student[studentNum];
-	
+void StudentInformationInit(Student *studentArr, map<string, Student *> & StudentInfo, int studentNum){
 	studentArr[0].name = "abc";
 	studentArr[0].point = 100;
 	studentArr[0].age = 26;
-	
+
 	studentArr[1].name = "이승영";
 	studentArr[1].point = 100;
 	studentArr[1].age = 25;
-	
+
 	studentArr[1].name = "이영재";
 	studentArr[1].point = 100;
 	studentArr[1].age = 18;
@@ -33,7 +31,7 @@ void StudentInformationInit(map<string, Student *> & StudentInfo, int studentNum
 void PrintStudentInfo(map<string, Student*> & StudentInfo, string studentName){
 	//map<string, Student *>::iterator student;
 	auto student = StudentInfo.find(studentName);
-	if (student == StudentInfo.end()){
+	if ( student == StudentInfo.end()){
 		cout << "해당하는 학생의 이름이 없습니다" << endl;
 	}
 	else
@@ -43,10 +41,20 @@ void PrintStudentInfo(map<string, Student*> & StudentInfo, string studentName){
 		cout << (student->second)->point << endl;
 	}
 }
+
+void ReleaseStudnetInfo(map<string, Student *> & StudentInfo){
+	StudentInfo.clear();
+}
+
 int main(void){
 	int studentNum = 3;
 	map<string, Student *> StudentInfo;
-	StudentInformationInit(StudentInfo, studentNum);
+	Student * studentArr = new Student[studentNum];
+	StudentInformationInit(studentArr, StudentInfo, studentNum);
+	PrintStudentInfo(StudentInfo, "이인재");
+	delete[] studentArr;
+	studentArr = nullptr;
+	ReleaseStudnetInfo(StudentInfo);
 	PrintStudentInfo(StudentInfo, "이인재");
 	getchar();
 	return 0;
