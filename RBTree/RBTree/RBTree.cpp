@@ -21,12 +21,12 @@ typedef struct _Tree{
 }Tree_t;
 
 void NillNodeInit(Node_t * node){
-	node->blackHeight	= 0;
-	node->color			= BLACK;
-	node->leftChild		= nullptr;
-	node->rightChild	= nullptr;
-	node->parent		= nullptr;
-	node->data			= -1;
+	node->blackHeight = 0;
+	node->color = BLACK;
+	node->leftChild = nullptr;
+	node->rightChild = nullptr;
+	node->parent = nullptr;
+	node->data = -1;
 }
 
 void RedBlackTreeInit(Tree_t * tree, Node_t * nillNode){
@@ -46,7 +46,7 @@ bool RedParentViolationCheck(Tree_t * tree, Node_t * node){
 
 	if (node->parent->color == RED)
 		return true;
-	
+
 	return false;
 }
 
@@ -134,19 +134,19 @@ void InsertFixUp(Tree_t * tree, Node_t * node, Node_t * nillNode){
 				LeftRotate(tree, fixupNode->parent->parent, nillNode);
 			}
 		}
-		
+
 	}
 	tree->root->color = BLACK;
 }
 
 bool InsertNewNode(Tree_t * tree, int data, Node_t * nillNode){
-	Node_t * newNode		= new Node_t;
-	newNode->color			= RED;
-	newNode->blackHeight	= 0;
-	newNode->leftChild		= nillNode;
-	newNode->rightChild		= nillNode;
-	newNode->parent			= nullptr;
-	newNode->data			= data;
+	Node_t * newNode = new Node_t;
+	newNode->color = RED;
+	newNode->blackHeight = 0;
+	newNode->leftChild = nillNode;
+	newNode->rightChild = nillNode;
+	newNode->parent = nillNode;
+	newNode->data = data;
 
 	Node_t * curNode = tree->root;
 	Node_t * curNodeParent = curNode;
@@ -168,7 +168,7 @@ bool InsertNewNode(Tree_t * tree, int data, Node_t * nillNode){
 				return false;
 			}
 		}
-		
+
 		if (curNodeParent->data < newNode->data)
 			curNodeParent->rightChild = newNode;
 		else
@@ -188,7 +188,7 @@ bool InsertNewNode(Tree_t * tree, int data, Node_t * nillNode){
 int main(void){
 	Tree_t * tree = new Tree_t;
 	Node_t * nillNode = new Node_t;
-	
+
 	NillNodeInit(nillNode);
 	RedBlackTreeInit(tree, nillNode);
 

@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{6E71C4A6-722A-4C01-8FB0-FA984B52BD24}</ProjectGuid>
+    <ProjectGuid>{18A944EC-AAC9-4547-8B0B-6142A301B7E4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RedBlackTree</RootNamespace>
+    <RootNamespace>RBTree</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,7 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="RedBlackTree.cpp" />
+    <ClCompile Include="RBTree.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
