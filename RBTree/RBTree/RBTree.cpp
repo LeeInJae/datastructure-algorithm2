@@ -1,4 +1,5 @@
 #include <iostream>
+#include <queue>
 
 using namespace std;
 
@@ -20,21 +21,28 @@ typedef struct _Tree{
 	Node_t * root;
 }Tree_t;
 
-void NillNodeInit(Node_t * node){
+bool NillNodeInit(Node_t * node){
+	if (node == nullptr)
+		return false;
+
 	node->blackHeight = 0;
 	node->color = BLACK;
 	node->leftChild = nullptr;
 	node->rightChild = nullptr;
 	node->parent = nullptr;
 	node->data = -1;
+	return true;
 }
 
-void RedBlackTreeInit(Tree_t * tree, Node_t * nillNode){
+bool RedBlackTreeInit(Tree_t * tree, Node_t * nillNode){
+	if (tree == nullptr || nillNode == nullptr)
+		return false;
 	tree->root = new Node_t;
 	tree->root = nillNode;
 	tree->root->parent = nillNode;
 	tree->root->leftChild = nillNode;
 	tree->root->rightChild = nillNode;
+	return false;
 }
 
 bool RedParentViolationCheck(Tree_t * tree, Node_t * node){
@@ -50,7 +58,9 @@ bool RedParentViolationCheck(Tree_t * tree, Node_t * node){
 	return false;
 }
 
-void LeftRotate(Tree_t * tree, Node_t * nodeX, Node_t * nillNode){
+bool LeftRotate(Tree_t * tree, Node_t * nodeX, Node_t * nillNode){
+	if (tree == nullptr || nodeX == nullptr)
+		return false;
 	Node_t * nodeY = nodeX->rightChild;
 
 	nodeX->rightChild = nodeY->leftChild;
@@ -68,9 +78,12 @@ void LeftRotate(Tree_t * tree, Node_t * nodeX, Node_t * nillNode){
 
 	nodeY->leftChild = nodeX;
 	nodeX->parent = nodeY;
+	return true;
 }
 
-void RightRotate(Tree_t * tree, Node_t * nodeY, Node_t * nillNode){
+bool RightRotate(Tree_t * tree, Node_t * nodeY, Node_t * nillNode){
+	if (tree == nullptr || nodeY == nullptr)
+		return false;
 	Node_t * nodeX = nodeY->leftChild;
 
 	nodeY->leftChild = nodeX->rightChild;
@@ -88,10 +101,12 @@ void RightRotate(Tree_t * tree, Node_t * nodeY, Node_t * nillNode){
 
 	nodeX->rightChild = nodeY;
 	nodeY->parent = nodeX;
+	return true;
 }
 
-void InsertFixUp(Tree_t * tree, Node_t * node, Node_t * nillNode){
-
+bool InsertFixUp(Tree_t * tree, Node_t * node, Node_t * nillNode){
+	if (tree == nullptr || node == nullptr)
+		return false;
 	Node_t * fixupNode = node;
 	Node_t * uncloeNode = nullptr;
 
@@ -102,7 +117,7 @@ void InsertFixUp(Tree_t * tree, Node_t * node, Node_t * nillNode){
 			if (uncloeNode->color == RED){
 				fixupNode->parent->color = BLACK;
 				uncloeNode->color = BLACK;
-				fixupNode->parent->parent->color = BLACK;
+				fixupNode->parent->parent->color = RED;
 				fixupNode = fixupNode->parent->parent;
 			}
 			else{
@@ -116,12 +131,12 @@ void InsertFixUp(Tree_t * tree, Node_t * node, Node_t * nillNode){
 			}
 		}
 		else{
-			uncloeNode = fixupNode->parent->parent->rightChild;
+			uncloeNode = fixupNode->parent->parent->leftChild;
 
 			if (uncloeNode->color == RED){
 				fixupNode->parent->color = BLACK;
 				uncloeNode->color = BLACK;
-				fixupNode->parent->parent->color = BLACK;
+				fixupNode->parent->parent->color = RED;
 				fixupNode = fixupNode->parent->parent;
 			}
 			else{
@@ -137,6 +152,7 @@ void InsertFixUp(Tree_t * tree, Node_t * node, Node_t * nillNode){
 
 	}
 	tree->root->color = BLACK;
+	return true;
 }
 
 bool InsertNewNode(Tree_t * tree, int data, Node_t * nillNode){
@@ -185,16 +201,239 @@ bool InsertNewNode(Tree_t * tree, int data, Node_t * nillNode){
 	return true;
 }
 
+// bool PrintLevelTreeOrder(Tree_t * tree){
+// 	if (tree == nullptr)
+// 		return false;
+// 
+// 	queue<Node_t *> q;
+// 	q.push(tree->root);
+// 
+// 	while (!q.empty()){
+// 		Node_t * curNode = q.front();
+// 		cout << curNode->data << curNode->color << endl;
+// 
+// 		if (curNode->leftChild != nullptr){
+// 			q.push(curNode->leftChild);
+// 		}
+// 		if (curNode->rightChild != nullptr){
+// 			q.push(curNode->rightChild);
+// 		}
+// 
+// 		q.pop();
+// 	}
+// 	return true;
+// }
+
+Node_t * SearchNode(Tree_t * tree, int key, Node_t * nillNode){
+	if (tree == nullptr || tree->root == nillNode)
+		return nullptr;
+	
+	Node_t * curNode = tree->root;
+	Node_t * curNodeParent = nullptr;
+
+	while (curNode != nillNode){
+		curNodeParent = curNode;
+		if (curNode->data == key)
+			break;
+		else if (curNode->data < key){
+			curNode = curNode->rightChild;
+		}
+		else
+			curNode = curNode->leftChild;
+	}
+	if (curNodeParent->data != key){
+		return nullptr;
+	}
+	return curNodeParent;
+}
+
+bool TransPlant(Tree_t * tree, Node_t * targetNode, Node_t * plantNode, Node_t * nillNode){
+	if (tree == nullptr || targetNode == nullptr)
+		return false;
+
+	if (targetNode->parent == nillNode)
+		tree->root = plantNode;
+	else if (targetNode->parent->leftChild == targetNode)
+		targetNode->parent->leftChild = plantNode;
+	else
+		targetNode->parent->rightChild = plantNode;
+
+	if (plantNode != nillNode)
+		plantNode->parent = targetNode->parent;
+
+	return false;
+}
+
+Node_t * treeMinimum(Tree_t * tree, Node_t * targetNode, Node_t * nillNode){
+	if (tree == nullptr || nillNode == nullptr)
+		return false;
+
+	Node_t * curNode = targetNode;
+	Node_t * curNodeParent = nullptr;
+
+	while (curNode != nillNode){
+		curNodeParent = curNode;
+		curNode = curNode->rightChild;
+	}
+	return curNodeParent;
+}
+
+Node_t * treeMaximum(Tree_t * tree, Node_t * targetNode, Node_t * nillNode){
+	if (tree == nullptr || nillNode == nullptr)
+		return false;
+
+	Node_t * curNode = targetNode;
+	Node_t * curNodeParent = nullptr;
+
+	while (curNode != nillNode){
+		curNodeParent = curNode;
+		curNode = curNode->leftChild;
+	}
+	return curNodeParent;
+}
+
+bool DeleteFixup(Tree_t * tree, Node_t * fixupNode, Node_t * nillNode){
+	if (tree == nullptr || fixupNode == nullptr)
+		return false;
+
+	Node_t * siblingNode = nullptr;
+
+	while (fixupNode != tree->root && fixupNode->color == BLACK){
+		if (fixupNode == fixupNode->parent->leftChild){
+			siblingNode = fixupNode->parent->rightChild;
+			if (siblingNode->color == RED){
+				fixupNode->parent->color = RED;
+				siblingNode->color = BLACK;
+				LeftRotate(tree, fixupNode->parent, nillNode);
+				siblingNode = fixupNode->parent->rightChild;
+			}
+			if (siblingNode->leftChild->color == BLACK && siblingNode->rightChild->color == BLACK){
+				siblingNode->color = RED;
+				fixupNode = fixupNode->parent;
+			}
+			else{
+				if (siblingNode->rightChild->color == BLACK){
+					siblingNode->leftChild->color = BLACK;
+					siblingNode->color = RED;
+					RightRotate(tree, siblingNode, nillNode);
+					siblingNode = fixupNode->parent->rightChild;
+				}
+				siblingNode->color = fixupNode->parent->color;
+				fixupNode->parent->color = BLACK;
+				siblingNode->rightChild->color = BLACK;
+				LeftRotate(tree, fixupNode->parent, nillNode);
+				fixupNode = tree->root;//³¡
+			}
+		}
+		else{
+			siblingNode = fixupNode->parent->leftChild;
+			if (siblingNode->color == RED){
+				fixupNode->parent->color = RED;
+				siblingNode->color = BLACK;
+				RightRotate(tree, fixupNode->parent, nillNode);
+				siblingNode = fixupNode->parent->leftChild;
+			}
+			if (siblingNode->rightChild->color == BLACK && siblingNode->leftChild->color == BLACK){
+				siblingNode->color = RED;
+				fixupNode = fixupNode->parent;
+			}
+			else{
+				if (siblingNode->leftChild->color == BLACK){
+					siblingNode->rightChild->color = BLACK;
+					siblingNode->color = RED;
+					LeftRotate(tree, siblingNode, nillNode);
+					siblingNode = fixupNode->parent->leftChild;
+				}
+				siblingNode->color = fixupNode->parent->color;
+				fixupNode->parent->color = BLACK;
+				siblingNode->leftChild->color = BLACK;
+				RightRotate(tree, fixupNode->parent, nillNode);
+				fixupNode = tree->root;//³¡
+			}
+		}
+	}
+	fixupNode->color = BLACK;
+	return true;
+}
+
+bool DeleteNode(Tree_t * tree, Node_t * targetNode, Node_t * nillNode){
+	if (tree == nullptr || targetNode == nullptr)
+		return false;
+
+	Node_t * successor, * fixupNode;
+	Color_t erasedColor = targetNode->color;
+
+	if (targetNode->leftChild == nillNode){
+		fixupNode = targetNode->rightChild;
+		TransPlant(tree, targetNode, targetNode->rightChild, nillNode);
+	}
+	else if (targetNode->rightChild == nillNode){
+		fixupNode = targetNode->leftChild;
+		TransPlant(tree, targetNode, targetNode->leftChild, nillNode);
+	}
+	else{
+		successor = treeMinimum(tree, targetNode->rightChild, nillNode);
+		erasedColor = successor->color;
+		fixupNode = successor->rightChild;
+
+		if (successor->parent == targetNode)
+			fixupNode->parent = successor;
+
+		if (successor != targetNode->rightChild){
+			TransPlant(tree, successor, successor->rightChild, nillNode);
+			successor->rightChild = targetNode->rightChild;
+			successor->rightChild->parent = successor;
+		}
+		TransPlant(tree, targetNode, successor, nillNode);
+		successor->leftChild = targetNode->leftChild;
+		successor->leftChild->parent = successor;
+		successor->color = targetNode->color;
+	}
+
+	if (erasedColor == BLACK)
+		DeleteFixup(tree, fixupNode, nillNode);
+	return true;
+}
+
 int main(void){
 	Tree_t * tree = new Tree_t;
 	Node_t * nillNode = new Node_t;
-
+	Node_t * searchNode = nullptr;
 	NillNodeInit(nillNode);
 	RedBlackTreeInit(tree, nillNode);
 
 	InsertNewNode(tree, 11, nillNode);
 	InsertNewNode(tree, 2, nillNode);
 	InsertNewNode(tree, 14, nillNode);
+	InsertNewNode(tree, 5, nillNode);
+	InsertNewNode(tree, 9, nillNode);
+	InsertNewNode(tree, 1, nillNode);
+
+	searchNode = SearchNode(tree, 2, nillNode);
+	DeleteNode(tree, searchNode, nillNode);
+	searchNode = SearchNode(tree, 2, nillNode);
+
+	searchNode = SearchNode(tree, 11, nillNode);
+	DeleteNode(tree, searchNode, nillNode);
+	searchNode = SearchNode(tree, 11, nillNode);
+
+	searchNode = SearchNode(tree, 14, nillNode);
+	DeleteNode(tree, searchNode, nillNode);
+	searchNode = SearchNode(tree, 14, nillNode);
+	
+	searchNode = SearchNode(tree, 5, nillNode);
+	DeleteNode(tree, searchNode, nillNode);
+	searchNode = SearchNode(tree, 5, nillNode);
+	
+	searchNode = SearchNode(tree, 9, nillNode);
+	DeleteNode(tree, searchNode, nillNode);
+	searchNode = SearchNode(tree, 9, nillNode);
+
+	searchNode = SearchNode(tree, 1, nillNode);
+	DeleteNode(tree, searchNode, nillNode);
+	searchNode = SearchNode(tree, 1, nillNode);
+
+	//PrintLevelTreeOrder(tree);
 	getchar();
 	return 0;
 }
