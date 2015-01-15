@@ -376,6 +376,7 @@ bool DeleteNode(Tree_t * tree, Node_t * targetNode, Node_t * nillNode){
 		erasedColor = successor->color;
 		fixupNode = successor->rightChild;
 
+		//이것의 의미
 		if (successor->parent == targetNode)
 			fixupNode->parent = successor;
 
@@ -395,6 +396,40 @@ bool DeleteNode(Tree_t * tree, Node_t * targetNode, Node_t * nillNode){
 	return true;
 }
 
+int CheckBlackHeight(Tree_t * tree, Node_t * node, Node_t * nillNode){
+	if (tree == nullptr || node == nullptr) 
+		return -1;
+
+	if (node == nillNode)
+		return 0;
+
+	int left = CheckBlackHeight(tree, node->leftChild, nillNode);
+	int right = CheckBlackHeight(tree, node->rightChild, nillNode);
+		
+	if (left == -1 || right == -1)
+		return -1;
+
+	if (node->leftChild == nillNode || node->leftChild->color == BLACK)
+		++left;
+	
+	if (node->rightChild == nillNode || node->rightChild->color == BLACK)
+		++right;
+	
+	if (left == right)
+		return left;
+	
+	return -1;
+}
+
+void IsRedBlackTreeCorrect(Tree_t * tree, Node_t * node, Node_t * nillNode){
+	int height = CheckBlackHeight(tree, tree->root, nillNode);
+
+	if (height != -1)
+		cout << "Red Black Tree Height = " << height << endl;
+	else
+		cout << "Black Height 가 다름" << endl;
+}
+
 int main(void){
 	Tree_t * tree = new Tree_t;
 	Node_t * nillNode = new Node_t;
@@ -403,12 +438,16 @@ int main(void){
 	RedBlackTreeInit(tree, nillNode);
 
 	InsertNewNode(tree, 11, nillNode);
+	IsRedBlackTreeCorrect(tree, tree->root, nillNode);
 	InsertNewNode(tree, 2, nillNode);
+	IsRedBlackTreeCorrect(tree, tree->root, nillNode);
 	InsertNewNode(tree, 14, nillNode);
 	InsertNewNode(tree, 5, nillNode);
 	InsertNewNode(tree, 9, nillNode);
 	InsertNewNode(tree, 1, nillNode);
 
+	IsRedBlackTreeCorrect(tree, tree->root, nillNode);
+
 	searchNode = SearchNode(tree, 2, nillNode);
 	DeleteNode(tree, searchNode, nillNode);
 	searchNode = SearchNode(tree, 2, nillNode);
@@ -433,7 +472,8 @@ int main(void){
 	DeleteNode(tree, searchNode, nillNode);
 	searchNode = SearchNode(tree, 1, nillNode);
 
-	//PrintLevelTreeOrder(tree);
+	IsRedBlackTreeCorrect(tree, tree->root, nillNode);
+
 	getchar();
 	return 0;
 }
