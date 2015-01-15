@@ -474,6 +474,8 @@ int main(void){
 
 	IsRedBlackTreeCorrect(tree, tree->root, nillNode);
 
+	delete tree;
+	delete nillNode;
 	getchar();
 	return 0;
 }
