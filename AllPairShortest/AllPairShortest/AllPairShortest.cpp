@@ -22,6 +22,7 @@ int ** Make2dArray(int size){
 bool MakeAdjMatrix(int ** preArr){
 	if (preArr == nullptr)
 		return false;
+
 	preArr[0][1] = 6;
 	preArr[0][3] = 7;
 	preArr[1][2] = 5;
