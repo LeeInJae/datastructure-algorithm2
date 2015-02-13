@@ -10,7 +10,7 @@ void InsertionSort(int * arr, int size){
 			arr[pos+1] = arr[pos];
 			--pos;
 		}
-		arr[pos + 1] = curKey;;
+		arr[pos + 1] = curKey;
 	}
 }
 

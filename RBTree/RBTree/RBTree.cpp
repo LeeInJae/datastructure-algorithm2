@@ -37,7 +37,6 @@ bool NillNodeInit(Node_t * node){
 bool RedBlackTreeInit(Tree_t * tree, Node_t * nillNode){
 	if (tree == nullptr || nillNode == nullptr)
 		return false;
-	tree->root = new Node_t;
 	tree->root = nillNode;
 	tree->root->parent = nillNode;
 	tree->root->leftChild = nillNode;

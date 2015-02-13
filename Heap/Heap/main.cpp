@@ -14,6 +14,10 @@ int main(void){
 	heap->Insert(7);
 	heap->Insert(9);
 	heap->PrintNode();
+	
+	if (heap->CheckTree(1)){
+		cout << "해당 트리는 힙의 조건을 만족함" << endl;
+	}
 	heap->Sort();
 	heap->PrintNode();
 	getchar();
