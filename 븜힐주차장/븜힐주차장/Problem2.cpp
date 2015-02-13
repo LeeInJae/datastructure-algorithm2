@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <string.h>
 #include <unordered_map>
@@ -21,7 +22,7 @@ struct Time{
 class Car{
 public:
 	Car(){}
-	Car(string inputCarName, Time inputDestTime, int inputWorkTime, int inputTotDestTimeSec, int inputOrder, int inputMaxDelayTime) :
+	Car(wstring inputCarName, Time inputDestTime, int inputWorkTime, int inputTotDestTimeSec, int inputOrder, int inputMaxDelayTime) :
 		carName(inputCarName), destTime(inputDestTime), workTime(inputWorkTime), totDestTimeSec(inputTotDestTimeSec), order(inputOrder), delayTime(inputMaxDelayTime), adjustTime(0),
 		isCehckingTime(false),isParkTime(false), curParkTime(0), curWorkTime(0){}
 	~Car(){}
@@ -32,7 +33,7 @@ public:
 	void SubDealyTime(){ --delayTime; }
 	void AddCurParkTime(){ ++curParkTime; }
 	void AddCurWorkTime(){ ++curWorkTime; }
-	string GetCarName(){ return carName; }
+	wstring GetCarName(){ return carName; }
 	Time GetDestTime(){ return destTime; }
 	int GetWorkTime(){ return workTime; }
 	int GetDestTimeHour(){ return destTime.hour; }
@@ -47,7 +48,7 @@ public:
 	bool GetIsParkTime(){ return isParkTime; }
 
 private:
-	string carName;
+	wstring carName;
 	Time destTime;
 	int workTime;
 	int totDestTimeSec;
@@ -78,7 +79,7 @@ public:
 	void SubCarCurNumber(){ --curCarNumber; }
 	void AddUsingParkCarCount(){ ++usingParkCarCount; }
 	void SubWaitCarListDelayTime();
-	void AddParkingCarList(unordered_map< string, int>& carInfoData);
+	void AddParkingCarList(unordered_map< wstring, int>& carInfoData);
 	int GetSpaceArea(){ return spaceArea; }
 	int GetAdjustmentTime(){ return adjustmentTime; }
 	int GetMaxDealyTime(){ return maxDelayTime; }
@@ -105,7 +106,7 @@ public:
 	list<Car*>& GetParkingCarList(){ return parkingCarList; }
 	list<Car*>& GetAdjustCarList(){ return adjustCarList; }
 	
-	void DoParkingCar(list<Car*> & carList, unordered_map< string, int>& carInfoData);
+	void DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& carInfoData);
 private:
 	int spaceArea;
 	int adjustmentTime;
@@ -125,7 +126,7 @@ private:
 
 struct Result{
 	int bustParkTime;
-	string firstDestCarname;
+	wstring firstDestCarname;
 	int totTimeSec;
 	Time fullParkingTime;
 	int usingParkCarCount;
@@ -147,17 +148,17 @@ struct StlListSort{
 	}
 };
 
-Time StrTokTime(char * str){
+Time StrTokTime(wchar_t * str){
 	Time time;
-	char * token;
-	char * nextToken;
+	wchar_t * token;
+	wchar_t * nextToken;
 	int calculateTime;
 	for (int i = 0; i < 3; ++i)
 	{
 		calculateTime = 0;
-		token = strtok_s(str, ":", &nextToken); 
+		token = wcstok_s(str, L":", &nextToken); 
 		str = nextToken;
-		if (strlen(token) == 2){
+		if (wcslen(token) == 2){
 			calculateTime += (token[0] - '0') * 10;
 			calculateTime += (token[1] - '0');
 		}
@@ -185,24 +186,25 @@ Time StrTokTime(char * str){
 	return time;
 }
 
-void InputData(unordered_map< string, int>& carInfoData, CarPark *& carPark){
-	FILE * fin;
-	errno_t err;
-	err = fopen_s(&fin, INPUT_INFO_FILE_NAME, "r");
-
+void InputData(unordered_map< wstring, int>& carInfoData, CarPark *& carPark){
+	wifstream wifs;
+	wstring txtline;
+	wifs.open("data0.ini");
+	wifs.imbue(locale(wifs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
+	
 	int spaceArea;
 	int adjustmentTime;
 	int maxDelayTime;
 	Time openTime, closeTime;
-	char tempName[CAR_NAME_MAX_LENGTH];
-	char temp;
+	wchar_t tempName[CAR_NAME_MAX_LENGTH];
 	int tempInt, tempOpenTime, tempCloseTime;
 
-	fscanf_s(fin, "%s", tempName, CAR_NAME_MAX_LENGTH);
+	wifs >> txtline;
+
 	for (int i = 0; i < 3; ++i){
-		fscanf_s(fin, "%s %c", tempName, CAR_NAME_MAX_LENGTH, &temp);
-		fscanf_s(fin, "%d", &tempInt); 
-		
+		wifs >> txtline;
+		wifs >> txtline;
+		wifs >> tempInt;
 		switch (i)
 		{
 		case 0:
@@ -219,61 +221,66 @@ void InputData(unordered_map< string, int>& carInfoData, CarPark *& carPark){
 		}
 	}
 
-	fscanf_s(fin, "%s %c", tempName, CAR_NAME_MAX_LENGTH, &temp);
-	fscanf_s(fin, "%s", &tempName,CAR_NAME_MAX_LENGTH);
-	openTime = StrTokTime(tempName);
-	tempOpenTime = 0;
-	tempOpenTime += openTime.second + openTime.minute * 60 + openTime.hour * 3600;
-	
-	fscanf_s(fin, "%s %c", tempName, CAR_NAME_MAX_LENGTH, &temp);
-	fscanf_s(fin, "%s", &tempName, CAR_NAME_MAX_LENGTH);
-	closeTime = StrTokTime(tempName);
-	tempCloseTime = 0;
-	tempCloseTime += closeTime.second + closeTime.minute * 60 + closeTime.hour * 3600;
+	wifs >> txtline;
+	wifs >> tempName;
+	wifs >> tempName;
+ 	openTime = StrTokTime(tempName);
+ 	tempOpenTime = 0;
+ 	tempOpenTime += openTime.second + openTime.minute * 60 + openTime.hour * 3600;
+ 	
+	wifs >> txtline;
+	wifs >> tempName;
+	wifs >> tempName;
+ 	closeTime = StrTokTime(tempName);
+ 	tempCloseTime = 0;
+ 	tempCloseTime += closeTime.second + closeTime.minute * 60 + closeTime.hour * 3600;
+ 
+ 	carPark = new CarPark(spaceArea, adjustmentTime, maxDelayTime, openTime, closeTime, tempOpenTime, tempCloseTime);
 
-	carPark = new CarPark(spaceArea, adjustmentTime, maxDelayTime, openTime, closeTime, tempOpenTime, tempCloseTime);
-
-	while (true){
-		char tempStr[CAR_NAME_MAX_LENGTH];
-		fscanf_s(fin, "%s", tempName, CAR_NAME_MAX_LENGTH);
+ 	while (true){
+ 		wchar_t tempStr[CAR_NAME_MAX_LENGTH];
+		wifs >> tempName;
 		if (tempName[0] == '\0') break;
-		fscanf_s(fin, "%s", tempStr, CAR_NAME_MAX_LENGTH);
-		fscanf_s(fin, "%s", tempStr, CAR_NAME_MAX_LENGTH);
-		fscanf_s(fin, "%s", tempStr, CAR_NAME_MAX_LENGTH);
-		fscanf_s(fin, "%d", &tempInt);
-		tempName[strlen(tempName)-1] = '\0';
-		for (unsigned int i = 0; i < strlen(tempName); ++i){
+		wifs >> tempStr;
+		wifs >> tempStr;
+		wifs >> tempStr;
+		wifs >> tempInt;
+		tempName[wcslen(tempName)-1] = '\0';
+		for (unsigned int i = 0; i < wcslen(tempName); ++i){
 			tempName[i] = tempName[i + 1];
 		}
-		string carName = tempName;
+		wstring carName = tempName;
 		tempName[0] = '\0';
 		carInfoData[carName] = tempInt;
 	}
-	fclose(fin);
+	wifs.close();
 }
 
 void InputCarData(list<Car*> &carList, int maxDelayTime){
-	FILE * fin;
-	errno_t err;
-	err = fopen_s(&fin, INPUT_DATA_FILE_NAME, "r");
+	wifstream wifs;
+	wstring txtline;
+	wifs.open("data0.txt");
+	wifs.imbue(locale(wifs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
 	
 	int tempInt, tempTime;
 	int order = 0;
-	char tempStr[CAR_NAME_MAX_LENGTH];
+	wchar_t tempStr[CAR_NAME_MAX_LENGTH];
 	
-	fscanf_s(fin, "%s %s %s", tempStr, CAR_NAME_MAX_LENGTH, tempStr, CAR_NAME_MAX_LENGTH, tempStr, CAR_NAME_MAX_LENGTH);
+	wifs >> txtline;
+	wifs >> txtline;
+	wifs >> txtline;
 
 	while (true){
-		fscanf_s(fin, "%s", tempStr, CAR_NAME_MAX_LENGTH);
-		
+		wifs >> tempStr;
 		if (tempStr[0] == '\0')
 			break;
 		
-		string carName = tempStr;
-		fscanf_s(fin, "%s", tempStr, CAR_NAME_MAX_LENGTH);
+		wstring carName = tempStr;
+		wifs >> tempStr;
 		
 		Time time = StrTokTime(tempStr);
-		fscanf_s(fin, "%d", &tempInt);
+
+		wifs >> tempInt;
 		
 		tempTime = 0;
 		tempTime += time.second + time.minute * 60 + time.hour * 3600;
@@ -282,7 +289,7 @@ void InputCarData(list<Car*> &carList, int maxDelayTime){
 		tempStr[0] = '\0';
 		++order;
 	}
-	fclose(fin);
+	wifs.close();
 }
 
 //대기시간 하나씩 줄이기
@@ -334,7 +341,7 @@ void CarPark::CheckWaitCarPossibleParking(){
 }
 
 //주차가 완료됐는지 확인(주차하는데 걸리는 시간있으니까)
-void CarPark::AddParkingCarList(unordered_map< string, int>& carInfoData){
+void CarPark::AddParkingCarList(unordered_map< wstring, int>& carInfoData){
 	bool flag = false;
 
 	for (auto& i = parkingCarList.begin(); i != parkingCarList.end();){
@@ -377,7 +384,7 @@ void CarPark::CheckCarListDestTime(list<Car*> & carList){
 	}
 }
 
-void CarPark::DoParkingCar(list<Car*> & carList, unordered_map< string, int>& carInfoData){
+void CarPark::DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& carInfoData){
 	//오픈 전에 기다리고 있는 차들
 	for (auto& i = carList.begin(); i != carList.end();){
 		auto obj = *i;
@@ -446,10 +453,19 @@ void SecToTime(Result & res){
 	res.fullParkingTime.second = sec;
 }
 
+void Output(Result res){
+	res.usingParkCarCount = 0;
+	wofstream wofs;
+	wofs.open("data0.out");
+	wofs.imbue(locale(wofs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
+	wofs << res.bustParkTime << endl << res.firstDestCarname << endl << res.fullParkingTime.hour << ":" << res.fullParkingTime.minute << ":" << res.fullParkingTime.second << endl << res.usingParkCarCount << endl;
+	wofs.close();
+
+}
+
 int main(void){
-	std::locale::global(std::locale("ko_KR.UTF-8")); // 맨 처음 한번 실행
 	CarPark * carPark = nullptr;
-	unordered_map< string, int> carInfoData;
+	unordered_map< wstring, int> carInfoData;
 	list<Car*> carList;
 
 	InputData(carInfoData, carPark);
@@ -457,12 +473,12 @@ int main(void){
 	carList.sort(StlListSort());
 
 	Result res;
-	res.bustParkTime = carInfoData["버스트"];
+	res.bustParkTime = carInfoData[L"버스트"];
 	res.firstDestCarname = (carList.front())->GetCarName();
 	carPark->DoParkingCar(carList, carInfoData);
 	res.totTimeSec = carPark->GetFirstFullTime();
 	SecToTime(res);
-	
+	Output(res);
 	getchar();
 	return 0;
 }

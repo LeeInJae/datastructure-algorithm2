@@ -9,8 +9,6 @@ int main(void){
 	wifstream wifs;
 	wstring txtline;
 	
-	int c = 0;
-
 	wifs.open("data0.ini");
 	if (!wifs.is_open())
 	{
