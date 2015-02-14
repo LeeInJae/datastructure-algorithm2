@@ -2,13 +2,13 @@
 #include <fstream>
 #include <string>
 #include <string.h>
-#include <unordered_map>
+#include <hash_map>
 #include <list>
 #include <locale>
 #include <codecvt>
 
-#define INPUT_INFO_FILE_NAME L"Data0.ini"
-#define INPUT_DATA_FILE_NAME L"Data0.txt"
+#define INPUT_INFO_FILE_NAME L"Data.ini"
+#define INPUT_DATA_FILE_NAME L"Data.txt"
 #define OUTPUT_FILE_NAME L"DATA.out"
 #define CAR_NAME_MAX_LENGTH 100
 
@@ -74,19 +74,57 @@ public:
 		curCarNumber(0), usingParkCarCount(0), totOpenTimeSec(inputTotOpenTimeSec), totCloseTimeSec(inputTotCloseTimeSec), firstFull(false), firstFullTime(0), curTime(0),
 		curAdjustmentCar(nullptr), isFinishcurAdjustmentCar(false)
 	{}
-	~CarPark(){}
+	~CarPark(){
+		for (auto &i = waitCarList.begin(); i != waitCarList.end();){
+			auto iter = i;
+			auto obj = *iter;
+			if (obj){
+				i = waitCarList.erase(iter);
+				delete obj;
+			}
+		}
+
+		for (auto &i = parkingCarList.begin(); i != parkingCarList.end();){
+			auto iter = i;
+			auto obj = *iter;
+			if (obj){
+				i = parkingCarList.erase(iter);
+				delete obj;
+			}
+		}
+
+		for (auto &i = adjustWaitCarList.begin(); i != adjustWaitCarList.end();){
+			auto iter = i;
+			auto obj = *iter;
+			if (obj){
+				i = adjustWaitCarList.erase(iter);
+				delete obj;
+			}
+		}
+
+		for (auto &i = adjustCarList.begin(); i != adjustCarList.end();){
+			auto iter = i;
+			auto obj = *iter;
+			if (obj){
+				i = adjustCarList.erase(iter);
+				delete obj;
+			}
+		}
+		if (curAdjustmentCar)
+			delete curAdjustmentCar;
+	}
 
 public:
 	void TrueFirstFull(){ firstFull = true; }
 	void CheckCarListDestTime(list<Car*> & carList);
 	void CheckWaitCarListDelayTime();
-	void CheckWaitCarPossibleParking(unordered_map< wstring, int>& carInfoData);
+	void CheckWaitCarPossibleParking(hash_map< wstring, int>& carInfoData);
 	void CheckAdjustCar();
 	void AddCarCurNumber(){ ++curCarNumber; }
 	void SubCarCurNumber(){ --curCarNumber; }
 	void AddUsingParkCarCount(){ ++usingParkCarCount; }
 	void SubWaitCarListDelayTime();
-	void AddParkingCarList(unordered_map< wstring, int>& carInfoData);
+	void AddParkingCarList(hash_map< wstring, int>& carInfoData);
 	void CheckAdjutWaitCarList();
 	int GetSpaceArea(){ return spaceArea; }
 	int GetAdjustmentTime(){ return adjustmentTime; }
@@ -111,7 +149,7 @@ public:
 			return true;
 		return false;
 	}
-	void DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& carInfoData);
+	void DoParkingCar(list<Car*> & carList, hash_map< wstring, int>& carInfoData);
 private:
 	int spaceArea;
 	int adjustmentTime;
@@ -194,7 +232,7 @@ Time StrTokTime(wchar_t * str){
 	return time;
 }
 
-void InputData(unordered_map< wstring, int>& carInfoData, CarPark *& carPark){
+void InputData(hash_map< wstring, int>& carInfoData, CarPark *& carPark){
 	wifstream wifs;
 	wstring txtline;
 	wifs.open(INPUT_INFO_FILE_NAME);
@@ -315,6 +353,7 @@ void CarPark::CheckWaitCarListDelayTime(){
 
 		if (obj->GetDealyTime() < 0){
 			i = waitCarList.erase(i);
+			delete obj;//메모리해제
 		}
 		else
 			++i;
@@ -324,7 +363,7 @@ void CarPark::CheckWaitCarListDelayTime(){
 //waitList에서 parkingList로 가능성 있는 애들을 옮겨줌.
 //버그수정할 것 있음
 
-void CarPark::CheckWaitCarPossibleParking(unordered_map< wstring, int>& carInfoData){
+void CarPark::CheckWaitCarPossibleParking(hash_map< wstring, int>& carInfoData){
 	if (waitCarList.empty())
 		return;
 
@@ -348,7 +387,7 @@ void CarPark::CheckWaitCarPossibleParking(unordered_map< wstring, int>& carInfoD
 }
 
 //주차가 완료됐는지 확인(주차하는데 걸리는 시간있으니까)
-void CarPark::AddParkingCarList(unordered_map< wstring, int>& carInfoData){
+void CarPark::AddParkingCarList(hash_map< wstring, int>& carInfoData){
 	bool flag = false;
 
 	for (auto& i = parkingCarList.begin(); i != parkingCarList.end();){
@@ -430,7 +469,7 @@ void CarPark::CheckCarListDestTime(list<Car*> & carList){
 	}
 }
 
-void CarPark::DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& carInfoData){
+void CarPark::DoParkingCar(list<Car*> & carList, hash_map< wstring, int>& carInfoData){
 	//오픈 전에 기다리고 있는 차들
 	for (auto& i = carList.begin(); i != carList.end(); ++i){
 		auto obj = *i;
@@ -455,6 +494,8 @@ void CarPark::DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& c
 			if (obj->GetDealyTime() >= 0){
 				waitCarList.push_back(obj);
 			}
+			else
+				delete obj;
 		}
 		if (flag == false)
 			++i;
@@ -518,7 +559,7 @@ void Output(Result res){
 
 int main(void){
 	CarPark * carPark = nullptr;
-	unordered_map< wstring, int> carInfoData;
+	hash_map< wstring, int> carInfoData;
 	list<Car*> carList;
 
 	InputData(carInfoData, carPark);
@@ -533,6 +574,17 @@ int main(void){
 	res.usingParkCarCount = carPark->GetUsingParkCarCount();
 	SecToTime(res);
 	Output(res);
-	getchar();
+	
+	
+	delete carPark;
+	for (auto &i = carList.begin(); i != carList.end();){
+		auto iter = i;
+		auto obj = *iter;
+		if (obj){
+			i = carList.erase(iter);
+			delete obj;
+		}
+	}
+	//getchar();
 	return 0;
 }
