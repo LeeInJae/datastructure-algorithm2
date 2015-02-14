@@ -7,11 +7,10 @@
 #include <locale>
 #include <codecvt>
 
-#define INPUT_INFO_FILE_NAME "DATA0.ini"
-#define INPUT_DATA_FILE_NAME "DATA0.txt"
-#define OUTPUT_FILE_NAME "DATA.out"
+#define INPUT_INFO_FILE_NAME L"Data0.ini"
+#define INPUT_DATA_FILE_NAME L"Data0.txt"
+#define OUTPUT_FILE_NAME L"DATA.out"
 #define CAR_NAME_MAX_LENGTH 100
-#define MAX_WAIT_CAR_COUNT 10
 
 using namespace std;
 
@@ -24,15 +23,18 @@ public:
 	Car(){}
 	Car(wstring inputCarName, Time inputDestTime, int inputWorkTime, int inputTotDestTimeSec, int inputOrder, int inputMaxDelayTime) :
 		carName(inputCarName), destTime(inputDestTime), workTime(inputWorkTime), totDestTimeSec(inputTotDestTimeSec), order(inputOrder), delayTime(inputMaxDelayTime), adjustTime(0),
-		isCehckingTime(false),isParkTime(false), curParkTime(0), curWorkTime(0){}
+		isCehckingTime(false),isFinishPark(false), isFinishWork(false), curParkTime(0), curWorkTime(0), curAdjustTime(0){}
 	~Car(){}
 
 public:
+	void SubDealyTimeToSpecialNumber(int interval){ delayTime -= interval; }
 	void TrueIsCheckingTime(){ isCehckingTime = true; }
-	void TrueIsParkTime(){ isParkTime = true; }
+	void TrueIsFinishPark(){ isFinishPark = true; }
+	void TrueIsFinishWork(){ isFinishWork = true; }
 	void SubDealyTime(){ --delayTime; }
 	void AddCurParkTime(){ ++curParkTime; }
 	void AddCurWorkTime(){ ++curWorkTime; }
+	void AddCurAdjustTime(){ ++curAdjustTime; }
 	wstring GetCarName(){ return carName; }
 	Time GetDestTime(){ return destTime; }
 	int GetWorkTime(){ return workTime; }
@@ -44,21 +46,24 @@ public:
 	int GetDealyTime(){ return delayTime; }
 	int GetCurParkTime(){ return curParkTime; }
 	int GetCurWorkTime(){ return curWorkTime; }
+	int GetCurAdjustTime(){ return curAdjustTime; }
 	bool GetIsCheckingTime(){ return isCehckingTime; }
-	bool GetIsParkTime(){ return isParkTime; }
-
+	bool IsFinishPark(){ return isFinishPark; }
+	bool IsFinishWork(){ return isFinishWork; }
 private:
 	wstring carName;
-	Time destTime;
+	Time destTime, finishTime;
 	int workTime;
 	int totDestTimeSec;
 	int order;
 	int delayTime;
 	int adjustTime;
 	bool isCehckingTime;
-	bool isParkTime;
+	bool isFinishPark;
+	bool isFinishWork;
 	int curParkTime;
 	int curWorkTime;
+	int curAdjustTime;
 };
 
 class CarPark{
@@ -66,7 +71,8 @@ public:
 	CarPark(){}
 	CarPark(int inputSpaaceArea, int inputAdjustmentTime, int inputMaxDelayTime, Time inputOpenTime, Time inputCloseTime, int inputTotOpenTimeSec, int inputTotCloseTimeSec)
 		: spaceArea(inputSpaaceArea), adjustmentTime(inputAdjustmentTime), maxDelayTime(inputMaxDelayTime), openTime(inputOpenTime), closeTime(inputCloseTime),
-		curCarNumber(0), usingParkCarCount(0), totOpenTimeSec(inputTotOpenTimeSec), totCloseTimeSec(inputTotCloseTimeSec), firstFull(false), firstFullTime(0), curTime(0)
+		curCarNumber(0), usingParkCarCount(0), totOpenTimeSec(inputTotOpenTimeSec), totCloseTimeSec(inputTotCloseTimeSec), firstFull(false), firstFullTime(0), curTime(0),
+		curAdjustmentCar(nullptr), isFinishcurAdjustmentCar(false)
 	{}
 	~CarPark(){}
 
@@ -74,12 +80,14 @@ public:
 	void TrueFirstFull(){ firstFull = true; }
 	void CheckCarListDestTime(list<Car*> & carList);
 	void CheckWaitCarListDelayTime();
-	void CheckWaitCarPossibleParking();
+	void CheckWaitCarPossibleParking(unordered_map< wstring, int>& carInfoData);
+	void CheckAdjustCar();
 	void AddCarCurNumber(){ ++curCarNumber; }
 	void SubCarCurNumber(){ --curCarNumber; }
 	void AddUsingParkCarCount(){ ++usingParkCarCount; }
 	void SubWaitCarListDelayTime();
 	void AddParkingCarList(unordered_map< wstring, int>& carInfoData);
+	void CheckAdjutWaitCarList();
 	int GetSpaceArea(){ return spaceArea; }
 	int GetAdjustmentTime(){ return adjustmentTime; }
 	int GetMaxDealyTime(){ return maxDelayTime; }
@@ -91,6 +99,7 @@ public:
 	int GetUsingParkCarCount(){ return usingParkCarCount; }
 	int GetFirstFullTime(){ return firstFullTime; }
 	bool GetFirstFull(){ return firstFull; }
+
 	bool IsEmpty(){
 		if (curCarNumber == 0)
 			return true;
@@ -102,10 +111,6 @@ public:
 			return true;
 		return false;
 	}
-	list<Car*>& GetWaitCarList(){ return waitCarList; }
-	list<Car*>& GetParkingCarList(){ return parkingCarList; }
-	list<Car*>& GetAdjustCarList(){ return adjustCarList; }
-	
 	void DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& carInfoData);
 private:
 	int spaceArea;
@@ -119,9 +124,12 @@ private:
 	list<Car *> waitCarList;
 	list<Car *> parkingCarList;
 	list<Car *> adjustCarList;
+	list<Car *> adjustWaitCarList;
 	bool firstFull;
+	bool isFinishcurAdjustmentCar;
 	int firstFullTime;
 	int curTime;
+	Car * curAdjustmentCar;
 };
 
 struct Result{
@@ -189,7 +197,7 @@ Time StrTokTime(wchar_t * str){
 void InputData(unordered_map< wstring, int>& carInfoData, CarPark *& carPark){
 	wifstream wifs;
 	wstring txtline;
-	wifs.open("data0.ini");
+	wifs.open(INPUT_INFO_FILE_NAME);
 	wifs.imbue(locale(wifs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
 	
 	int spaceArea;
@@ -259,7 +267,7 @@ void InputData(unordered_map< wstring, int>& carInfoData, CarPark *& carPark){
 void InputCarData(list<Car*> &carList, int maxDelayTime){
 	wifstream wifs;
 	wstring txtline;
-	wifs.open("data0.txt");
+	wifs.open(INPUT_DATA_FILE_NAME);
 	wifs.imbue(locale(wifs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
 	
 	int tempInt, tempTime;
@@ -296,10 +304,7 @@ void InputCarData(list<Car*> &carList, int maxDelayTime){
 void CarPark::SubWaitCarListDelayTime(){
 	for (auto& i = waitCarList.begin(); i != waitCarList.end(); ++i){
 		auto obj = *i;
-		if (obj->GetTotDestTimeSec() <= curTime || obj->GetIsCheckingTime()){
-			obj->SubDealyTime();
-			obj->TrueIsCheckingTime();
-		}
+		obj->SubDealyTime();
 	}
 }
 
@@ -317,23 +322,25 @@ void CarPark::CheckWaitCarListDelayTime(){
 }
 
 //waitList에서 parkingList로 가능성 있는 애들을 옮겨줌.
-void CarPark::CheckWaitCarPossibleParking(){
+//버그수정할 것 있음
+
+void CarPark::CheckWaitCarPossibleParking(unordered_map< wstring, int>& carInfoData){
 	if (waitCarList.empty())
 		return;
 
 	auto iter = waitCarList.begin();
 	auto obj = *iter;
 
-	if ((obj->GetTotDestTimeSec() == curTime) || (obj->GetTotDestTimeSec() < curTime && obj->GetDealyTime() >= 0)){ //주차장 open 이전에 와서 기다린 차
+	if (obj->GetDealyTime() >= 0){
 		if (!IsFull()){
-			AddCarCurNumber();//이때부터 주차 공간 차지.
+			++curCarNumber;//이때부터 주차 공간 차지.
 			
+			++usingParkCarCount;//이용하는 차 카운트
+
 			if (IsFull() && firstFull == false){ //처음 만차된 시간을 구함
 				firstFull = true;
 				firstFullTime = curTime;
 			}
-			
-			obj->TrueIsCheckingTime();
 			waitCarList.erase(iter);
 			parkingCarList.push_back(obj);
 		}
@@ -349,96 +356,128 @@ void CarPark::AddParkingCarList(unordered_map< wstring, int>& carInfoData){
 		auto obj = *iter;
 		flag = false;
 
-		obj->AddCurParkTime();
-
-		if (!obj->GetIsParkTime()){ //아직 주차 완료되지 않고
+		if (!obj->IsFinishPark()){ //아직 주차 완료되지 않음
+			obj->AddCurParkTime();
 			if (obj->GetCurParkTime() == carInfoData[obj->GetCarName()]) //주차가 완료됐다면 workTime증가를 시켜주어야함
-				obj->TrueIsParkTime();
+				obj->TrueIsFinishPark();
 		}
 		else{//주차 완료 되었다면 이제부터 workTime 정의
-			obj->AddCurWorkTime();
-			if (obj->GetCurWorkTime() == obj->GetWorkTime()){ //일까지 다 완료됐다면 parkingList 에서 adjustList로 보내야함(그리고 이제 주차공간을 +1 늘려야..ㅇ?)
+			if (!obj->IsFinishWork()){//work 아직 안끝났으면
+				obj->AddCurWorkTime();
+				if (obj->GetCurWorkTime() == obj->GetWorkTime()){ //일까지 다 완료됐다면 parkingList 에서 adjustList로 보내야함(그리고 이제 주차공간을 + 1 늘려야..ㅇ?)
+					obj->TrueIsFinishWork();
+				}
+			}
+			else{//일이 끝났으면
 				i = parkingCarList.erase(iter);
-				adjustCarList.push_back(obj);
+				adjustWaitCarList.push_back(obj); //정산 대기줄에 넣어줌.
 				flag = true;
+				//--curCarNumber;
 			}
 		}
 
-		if (!flag)
+		if (flag == false)
 			++i;
 	}
 }
 
+void CarPark::CheckAdjutWaitCarList(){
+	if (adjustWaitCarList.empty())
+		return;
+
+	auto iter = adjustWaitCarList.begin();
+	auto obj = *iter;
+	
+	if (curAdjustmentCar == nullptr){ //현재 정산중인 차가 없다면
+		adjustWaitCarList.erase(iter);
+		curAdjustmentCar = obj;
+		--curCarNumber;
+	}
+}
+
+void CarPark::CheckAdjustCar(){
+	if (curAdjustmentCar == nullptr) return;
+
+	if (isFinishcurAdjustmentCar == true){
+		isFinishcurAdjustmentCar = false;
+		delete curAdjustmentCar;
+		curAdjustmentCar = nullptr;
+	}
+	else{
+		curAdjustmentCar->AddCurAdjustTime();//정산중인 차가 있다면 정산 계속 진행
+		if (curAdjustmentCar->GetCurAdjustTime() == adjustmentTime){
+			isFinishcurAdjustmentCar = true;
+		}
+	}
+}
 
 //carList에서 waitList로 추가될 놈이 있느지 확인
+//동시에 도착한놈 대기시간 같이 줄여줘여하는것 생각하기
 void CarPark::CheckCarListDestTime(list<Car*> & carList){
 	if (carList.empty())
 		return;
 
-	auto iter = carList.begin();
-	auto obj = *iter;
+	for (auto& i = carList.begin(); i != carList.end();){
+		auto iter = i;
+		auto obj = *iter;
 
-	if (obj->GetTotDestTimeSec() == curTime){
-		carList.erase(iter);
-		waitCarList.push_back(obj);
+		if (obj->GetTotDestTimeSec() == curTime){ //현재 타임에 들어올 수 있는 차들은 모두 waitCarList에 추가
+			i = carList.erase(iter);
+			waitCarList.push_back(obj);
+		}
+		else
+			++i;
 	}
 }
 
 void CarPark::DoParkingCar(list<Car*> & carList, unordered_map< wstring, int>& carInfoData){
 	//오픈 전에 기다리고 있는 차들
-	for (auto& i = carList.begin(); i != carList.end();){
+	for (auto& i = carList.begin(); i != carList.end(); ++i){
 		auto obj = *i;
-
-		if (obj->GetTotDestTimeSec() < totOpenTimeSec){
-			waitCarList.push_back(obj);
-			i = carList.erase(i);
-		}
-		else
-			++i;
-
-		if (waitCarList.size() >= MAX_WAIT_CAR_COUNT)
-			break;
-	}
-
-	//open전에 10개 다 차있으면 이전꺼 다 지워줌
-	if (waitCarList.size() >= 10){
-		for (auto& i = carList.begin(); i != carList.end();){
-			auto obj = *i;
-
-			if (obj->GetTotDestTimeSec() < totOpenTimeSec){
-				i = carList.erase(i);
-			}
-			else
-				++i;
-		}
-	}
-
-	if (!waitCarList.empty()){
-		auto iter = waitCarList.begin();
-		auto obj = *iter;
-		curTime = obj->GetTotDestTimeSec();
+		int interval = totOpenTimeSec - obj->GetTotDestTimeSec(); //가장 일찍온 Car와 open시간의 차이
 		
-		//출발시간까지 다 깜
-		while (curTime != GetTotOpenTimeSec()){
-			SubWaitCarListDelayTime();
-			++curTime;
-		}
+		if (obj->GetTotDestTimeSec() >= totOpenTimeSec)
+			break;
+		else
+			obj->SubDealyTimeToSpecialNumber(interval);
 	}
-	
-	curTime = GetTotOpenTimeSec();
-	
-	while (curTime != GetTotCloseTimeSec()){
+
+	for (auto& i = carList.begin(); i != carList.end();){
+		auto iter = i;
+		auto obj = *iter;
+		bool flag = false;
+
+		if (obj->GetTotDestTimeSec() >= totOpenTimeSec)
+			break;
+		else {
+			flag = true;
+			i = carList.erase(iter);
+			if (obj->GetDealyTime() >= 0){
+				waitCarList.push_back(obj);
+			}
+		}
+		if (flag == false)
+			++i;
+	}
+
+	///////////////////////////////////////////////////////////////////////////
+	curTime = totOpenTimeSec;
+	 
+	while (curTime != totCloseTimeSec + 1){
 		CheckCarListDestTime(carList); //carList에서 waitList로 추가될 만한 놈을 추가
-		CheckWaitCarListDelayTime(); //waitCar에 있는 애들 중 이미 가망 없는 애 제거
-		CheckWaitCarPossibleParking(); //wait에서 주차 가능한 차를 parkingList에 추가
+		AddParkingCarList(carInfoData); //parkingList에 있는 parking카들의 주차하는 시간 확인 (이미 있는 새키들 주차시간 + 1)
+		CheckAdjutWaitCarList();//정산대기 리스트에 있는 것들 중 정산할 수 있는 차가 있으면 바로 정산시켜줌
+		CheckAdjustCar();//현재 정산하고 있는 차의 update
+		CheckWaitCarPossibleParking(carInfoData); //waitList에서 주차 가능한 차를 parkingList에 추가
+		
 		++curTime;
- 		if (curTime == 36567) 
- 			curTime = 36567;
-		AddParkingCarList(carInfoData); //parkingList에 있는 parking카들의 주차하는 시간 확인
+		if (curTime > totCloseTimeSec) break;
 		SubWaitCarListDelayTime();//wait에 있는 car들은 이제 대기시간을 하나씩 줄여주어야 함
+		CheckWaitCarListDelayTime(); //waitCar에 있는 애들 중 이미 가망 없는 애 제거
 	}
 }
 
+//초를 시간으로 반환
 void SecToTime(Result & res){
 	int sec, min, hr;
 	sec = res.totTimeSec;
@@ -453,14 +492,28 @@ void SecToTime(Result & res){
 	res.fullParkingTime.second = sec;
 }
 
-void Output(Result res){
-	res.usingParkCarCount = 0;
-	wofstream wofs;
-	wofs.open("data0.out");
-	wofs.imbue(locale(wofs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
-	wofs << res.bustParkTime << endl << res.firstDestCarname << endl << res.fullParkingTime.hour << ":" << res.fullParkingTime.minute << ":" << res.fullParkingTime.second << endl << res.usingParkCarCount << endl;
-	wofs.close();
+//출력 양식 맞춤
+void PrintFormSet(wstring & str){
+	if (str.length() == 1){
+		str = L"0" + str;
+	}
+}
 
+//출력
+void Output(Result res){
+	wofstream wofs;
+	wofs.open(OUTPUT_FILE_NAME);
+	wofs.imbue(locale(wofs.getloc(), new codecvt_utf8<wchar_t, 0x10ffff, consume_header>()));
+	wstring hour = to_wstring(res.fullParkingTime.hour);
+	wstring minute = to_wstring(res.fullParkingTime.minute);
+	wstring second = to_wstring(res.fullParkingTime.second);
+	
+	PrintFormSet(hour);
+	PrintFormSet(minute);
+	PrintFormSet(second);
+
+	wofs << res.bustParkTime << endl << res.firstDestCarname << endl << hour << ":" << minute << ":" << second << endl << res.usingParkCarCount << endl;
+	wofs.close();
 }
 
 int main(void){
@@ -471,12 +524,13 @@ int main(void){
 	InputData(carInfoData, carPark);
 	InputCarData(carList, carPark->GetMaxDealyTime());
 	carList.sort(StlListSort());
-
+	
 	Result res;
 	res.bustParkTime = carInfoData[L"버스트"];
 	res.firstDestCarname = (carList.front())->GetCarName();
 	carPark->DoParkingCar(carList, carInfoData);
 	res.totTimeSec = carPark->GetFirstFullTime();
+	res.usingParkCarCount = carPark->GetUsingParkCarCount();
 	SecToTime(res);
 	Output(res);
 	getchar();

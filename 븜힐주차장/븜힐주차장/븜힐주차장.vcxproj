@@ -80,6 +80,19 @@
   <ItemGroup>
     <ClCompile Include="Problem2.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data0.ini" />
+    <None Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data0.out" />
+    <None Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data1.ini" />
+    <None Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data1.out" />
+    <None Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data2.ini" />
+    <None Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data2.out" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data0.txt" />
+    <Text Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data1.txt" />
+    <Text Include="..\..\..\..\..\Desktop\next\이력서\nexon\온라인 테스트\게임프로그래밍직군 온라인 사전과제_2015(2)\2. 붐힐마을주차장\샘플데이터\Data2.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
