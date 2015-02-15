@@ -1,20 +1,17 @@
 #include <iostream>
 #include <algorithm>
-#include <vector>
-#include <set>
+#include <list>
+#include <hash_map>
 #include <time.h>
+#include <map>
+#include <stack>
 
 using namespace std;
 
 #define INPUT_FILE_NAME "input.txt"
 #define OUTPUT_FILE_NAME "output.txt"
-#define MAX_BOMB 100
-
-int Min(int a, int b){
-	if (a < b)
-		return a;
-	return b;
-}
+#define MAX_NUMBER 1000000
+#define GRID_LENGTH 1000
 
 struct Point{
 	int x, y;
@@ -22,74 +19,27 @@ struct Point{
 class Circle{
 public:
 	Circle(){}
-	Circle(int inputX, int inputY, int inputR) {
+	Circle(int inputX, int inputY, int inputR, int inputId,int inputGridNumber) {
 		center.x = inputX;
 		center.y = inputY;
 		r = inputR;
+		id = inputId;
+		gridNumber = inputGridNumber;
 	}
 
 public:
-	static bool Cmp(const Circle * t1, const Circle * t2) {
-		if (t1->center.x < t2->center.x){
-			return true;
-		}
-		else if (t1->center.x == t2->center.x){
-			if (t1->center.y < t2->center.y)
-				return true;
-			else if (t1->center.y == t2->center.y){
-				if (t1->r < t2->r)
-					return true;
-				return false;
-			}
-		}
-		return false;
-	}
-	
-	static bool Cmp2(const Circle * t1, const Circle * t2) {
-		if (t1->center.y < t2->center.y){
-			return true;
-		}
-		else if (t1->center.y == t2->center.y){
-			if (t1->center.x < t2->center.x)
-				return true;
-			else if (t1->center.x == t2->center.x){
-				if (t1->r < t2->r)
-					return true;
-				return false;
-			}
-		}
-		return false;
-	}
-
 	Point GetCenter(){ return center;}
 	int GetCenterX(){ return center.x; }
 	int GetCenterY(){ return center.y; }
 	int GetR(){ return r; }
-
-	void SetSetNumber(int number){ setNumber = number; }
-	int GetSetNumber(){ return setNumber; }
+	int GetGridNumber(){ return gridNumber; }
+	int GetId(){ return id; }
 private:
 	Point center;
 	int r;
-	int setNumber;
+	int id;
+	int gridNumber;
 };
-
-void InputData(vector<Circle *> & bombVector){
-	FILE * fin;
-	errno_t err;
-	err = fopen_s(&fin, INPUT_FILE_NAME, "r");
-	
-	int tempN, tempX, tempY, tempR;
-	
-	fscanf_s(fin, "%d", &tempN);
-
-	for (int i = 0; i < tempN; ++i){
-		fscanf_s(fin, "%d %d %d", &tempX, &tempY, &tempR);
-
-		bombVector.push_back(new Circle(tempX, tempY, tempR));
-	}
-	fclose(fin);
-}
 
 bool IsCollision(Circle * obj1, Circle * obj2){
 	Point center1 = obj1->GetCenter();
@@ -102,163 +52,74 @@ bool IsCollision(Circle * obj1, Circle * obj2){
 	long long int obj2R = obj2->GetR();
 
 	long long int r = (obj1R + obj2R) * (obj1R + obj2R);
-	if (r < 0 || d < 0)
-		r = 0;
+
 	if (r >= d){
 		return true;
 	}
 	return false;
 }
 
-
-void FindMinBombCount(vector<Circle *> & bombVector){
-	FILE * fout;
+void InputData(hash_map<int, Circle*> & bombHashMap, multimap<int, Circle*> & gridBombMultiMap){
+	FILE * fin;
 	errno_t err;
-	err = fopen_s(&fout, OUTPUT_FILE_NAME, "w");
-
-	int tempCount = 0;
-	//x축 정렬
-	sort(bombVector.begin(), bombVector.end(), Circle::Cmp);
+	err = fopen_s(&fin, INPUT_FILE_NAME, "r");
 	
-	int preBorderStart, preBorderEnd, borderStart,borderEnd;
-	int i, j;
-
-	for (i = 0; i < bombVector.size(); ++i){
-		bombVector[i]->SetSetNumber(i + 1);
-	}
-
-	preBorderStart = 0;
-	preBorderEnd = 0;
+	int tempN, tempX, tempY, tempR, tempGrid, gridInterval;
 	
-	for (i = 0; i < bombVector.size(); ++i){
-		Circle * objI = bombVector[i];
-		borderStart = i;
-		bool flag = false;
-		for (j = borderStart; j < bombVector.size(); ++j){
-			Circle * objJ = bombVector[j];
-			
-			if (objI->GetCenterX() != objJ->GetCenterX()){
-				borderEnd = j;
-				flag = true;
-				break;
-			}
-		}
+	gridInterval = MAX_NUMBER / GRID_LENGTH;
 
-		if (flag == false){ //끝까지 다 같다면
-			borderEnd = j;
-		}
+	fscanf_s(fin, "%d", &tempN);
 
-		for (int k = preBorderStart; k < preBorderEnd; ++k){
-			Circle * objPivot = bombVector[k];
-			for (int l = borderStart; l < borderEnd; ++l){
-				Circle * objOper = bombVector[l];
-				if (IsCollision(objPivot, objOper)){
-					int min = Min(objPivot->GetSetNumber(), objOper->GetSetNumber());
-					objPivot->SetSetNumber(min);
-					objOper->SetSetNumber(min);
-					tempCount++;
-				}
-			}
-		}
-
-		//////////////같은 좌표 새키들
-		for (int k = i; k < borderEnd - 1; ++k){
-			Circle * objPivot = bombVector[k];
-			for (int l = k + 1; l < borderEnd; ++l){
-				Circle * objOper = bombVector[l];
-
-				if (IsCollision(objPivot, objOper)){
-					int min = Min(objPivot->GetSetNumber(), objOper->GetSetNumber());
-					objPivot->SetSetNumber(min);
-					objOper->SetSetNumber(min);
-					tempCount++;
-				}
-			}
-		}
-
-		if (borderEnd == bombVector.size())
-			break;
-
-		i = borderEnd - 1;
-		preBorderStart = borderStart;
-		preBorderEnd = borderEnd;
+	for (int i = 0; i < tempN; ++i){
+		fscanf_s(fin, "%d %d %d", &tempX, &tempY, &tempR);
+		int row = tempX / GRID_LENGTH;
+		int col = tempY / GRID_LENGTH;
+		tempGrid = row + col * gridInterval;
+		bombHashMap[i] = (new Circle(tempX, tempY, tempR, i, tempGrid));
+		gridBombMultiMap.insert(multimap<int, Circle*>::value_type(tempGrid, bombHashMap[i]));
 	}
-
-
-	//y축 정렬
-	sort(bombVector.begin(), bombVector.end(), Circle::Cmp2);
-	
-	preBorderStart = 0;
-	preBorderEnd = 0;
-
-	for (i = 0; i < bombVector.size(); ++i){
-		Circle * objI = bombVector[i];
-		borderStart = i;
-		bool flag = false;
-		for (j = borderStart; j < bombVector.size(); ++j){
-			Circle * objJ = bombVector[j];
-
-			if (objI->GetCenterY() != objJ->GetCenterY()){
-				borderEnd = j;
-				flag = true;
-				break;
-			}
-		}
-		if (flag == false){ //끝까지 다 같다면
-			borderEnd = j;
-		}
-
-		for (int k = preBorderStart; k < preBorderEnd; ++k){
-			Circle * objPivot = bombVector[k];
-			for (int l = borderStart; l < borderEnd; ++l){
-				Circle * objOper = bombVector[l];
-
-				if (IsCollision(objPivot, objOper)){
-					int min = Min(objPivot->GetSetNumber(), objOper->GetSetNumber());
-					objPivot->SetSetNumber(min);
-					objOper->SetSetNumber(min);
-				}
-			}
-		}
-
-		//////////////같은 좌표 새키들
-		for (int k = i; k < borderEnd - 1; ++k){
-			Circle * objPivot = bombVector[k];
-			for (int l = k + 1; l < borderEnd; ++l){
-				Circle * objOper = bombVector[l];
-
-				if (IsCollision(objPivot, objOper)){
-					int min = Min(objPivot->GetSetNumber(), objOper->GetSetNumber());
-					objPivot->SetSetNumber(min);
-					objOper->SetSetNumber(min);
-				}
-			}
-		}
-		if (borderEnd == bombVector.size())
-			break;
-
-		i = borderEnd - 1;
-		preBorderStart = borderStart;
-		preBorderEnd = borderEnd;
-	}
-	
-	set<int> setGroup;
-	for (int i = 0; i < bombVector.size(); ++i){
-		setGroup.insert(bombVector[i]->GetSetNumber());
-	}
-	int res = setGroup.size();
-	fprintf(fout, "%d\n", res);
-	printf("%d\n", res);
-	fclose(fout);
+	fclose(fin);
 }
 
-void ReleaseMemory(vector<Circle*> & bombVector){
-	for (auto &i = bombVector.begin(); i != bombVector.end();){
-		auto iter = i;
-		auto obj = *iter;
-		if (obj){
-			i = bombVector.erase(iter);
-			delete obj;
+void FindBombNumber(hash_map<int, Circle*> & bombHashMap, multimap<int, Circle*> & gridBombMultiMap){
+	int gridInterval = MAX_NUMBER / GRID_LENGTH;
+	Point adjGridAssist[9];
+	int tempCount = 0;
+	for (int i = -1; i <= 1; ++i){
+		for (int j = -1; j <= 1; ++j){
+			adjGridAssist[tempCount].x = i;
+			adjGridAssist[tempCount].y = j;
+			++tempCount;
+		}
+	}
+	stack<Circle *> explosionCircle;
+
+	int res = 0;
+	while (!bombHashMap.empty()){
+		Circle * curCicle;
+
+		if (explosionCircle.empty()){ //stack이 비어있으면, 현재 남은 폭탄에서 한개를 푸쉬해줌
+			++res;//폭탄 한 번 더 터뜨려야함
+			auto iter = bombHashMap.begin();
+			auto obj = iter->second;
+			bombHashMap.erase(iter);
+			explosionCircle.push(obj);
+			curCicle = obj;
+		} 
+		else{
+			auto obj = explosionCircle.top();
+			explosionCircle.pop();
+			curCicle = obj;
+		}
+		int curGrid = curCicle->GetGridNumber();
+
+		for (int j = 0; j < 9; ++j){
+			int adjGrid = curGrid + gridInterval*adjGridAssist[j].x + adjGridAssist[j].y;
+			if (adjGrid < 0 || adjGrid > gridInterval * gridInterval - 1) // 범위 벗어나면 그리드 검사 안함
+				continue;
+
+			auto curGridCircle = gridBombMultiMap.equal_range(curGrid);
+			auto adjGridCircle = gridBombMultiMap.equal_range(adjGrid);
 		}
 	}
 }
@@ -266,11 +127,11 @@ void ReleaseMemory(vector<Circle*> & bombVector){
 int main(void){
 	clock_t start_time, end_time;
 	start_time = clock();
-	vector<Circle *> bombVector;
+	hash_map<int, Circle*> bombHashMap; //id와 bomb
+	multimap<int, Circle*> gridBombMultiMap;
 
-	InputData(bombVector);
-	FindMinBombCount(bombVector);
-	ReleaseMemory(bombVector);
+	InputData(bombHashMap, gridBombMultiMap);
+	FindBombNumber(bombHashMap, gridBombMultiMap);
 	end_time = clock();
 	printf("Time : %f\n", ((double)(end_time - start_time)) / CLOCKS_PER_SEC);
 	getchar();
