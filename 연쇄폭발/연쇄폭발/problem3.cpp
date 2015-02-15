@@ -107,10 +107,21 @@ void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & 
 		up.x = tempX, up.y = tempY + tempR;
 		down.x = tempX, down.y = tempY - tempR;
 		
+// 		int minX = left.x;
+// 		int maxX = right.x;
+// 		int minY = down.y;
+// 		int maxY = up.y;
+
+
 		int minX = left.x;
 		int maxX = right.x;
 		int minY = down.y;
 		int maxY = up.y;
+		
+		minX -= 1000;
+		maxX += 1000;
+		minY -= 1000;
+		maxY += 1000;
 
 		minX = Revision(minX);
 		minY = Revision(minY);
@@ -129,6 +140,8 @@ void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & 
 		bombHashMap[i] = (new Circle(tempX, tempY, tempR, i, tempGrid));
 
 		auto curCircle = bombHashMap[i];
+
+		
 		//기존의 점들이랑 겹치는것 체크
 		for (int j = leftDownGrid; j <= leftUpGrid; j += GRID_INTERVAL){
 			for (int k = 0; k <= (maxX - minX); ++k){
@@ -155,8 +168,17 @@ void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & 
 			}
 		}
 	}
+
+	set<int> resSet;
+	for (auto iter = bombHashMap.begin(); iter != bombHashMap.end(); ++iter){
+		auto obj = iter->second;
+		resSet.insert(obj->GetGroupNumber());
+	}
+	int res = resSet.size();
+	printf("%d", res);
 	fclose(fin);
 }
+
 int main(void){
 	clock_t start_time, end_time;
 	start_time = clock();
