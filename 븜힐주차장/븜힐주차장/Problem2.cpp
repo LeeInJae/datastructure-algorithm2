@@ -557,6 +557,18 @@ void Output(Result res){
 	wofs.close();
 }
 
+void ReleaseMemory(CarPark * carPark, list<Car*> & carList){
+	delete carPark;
+	for (auto &i = carList.begin(); i != carList.end();){
+		auto iter = i;
+		auto obj = *iter;
+		if (obj){
+			i = carList.erase(iter);
+			delete obj;
+		}
+	}
+}
+
 int main(void){
 	CarPark * carPark = nullptr;
 	hash_map< wstring, int> carInfoData;
@@ -575,16 +587,7 @@ int main(void){
 	SecToTime(res);
 	Output(res);
 	
-	
-	delete carPark;
-	for (auto &i = carList.begin(); i != carList.end();){
-		auto iter = i;
-		auto obj = *iter;
-		if (obj){
-			i = carList.erase(iter);
-			delete obj;
-		}
-	}
+	ReleaseMemory(carPark, carList);
 	//getchar();
 	return 0;
 }
