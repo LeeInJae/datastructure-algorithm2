@@ -27,20 +27,24 @@ public:
 		r = inputR;
 		id = inputId;
 		gridNumber = inputGridNumber;
+		groupNumber = inputId;
 	}
 
 public:
+	void SetGroupNumber(int number){ groupNumber = number; }
 	Point GetCenter(){ return center;}
 	int GetCenterX(){ return center.x; }
 	int GetCenterY(){ return center.y; }
 	int GetR(){ return r; }
 	int GetGridNumber(){ return gridNumber; }
 	int GetId(){ return id; }
+	int GetGroupNumber(){ return groupNumber; }
 private:
 	Point center;
 	int r;
 	int id;
 	int gridNumber;
+	int groupNumber;
 };
 
 bool IsCollision(Circle * obj1, Circle * obj2){
@@ -59,6 +63,12 @@ bool IsCollision(Circle * obj1, Circle * obj2){
 		return true;
 	}
 	return false;
+}
+
+int Min(int a, int b){
+	if (a < b)
+		return a;
+	return b;
 }
 
 int Revision(int number){
@@ -115,96 +125,38 @@ void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & 
 		int leftDownGrid = GridFunc(minX, minY);
 		int leftUpGrid = GridFunc(minX, maxY);
 
+		tempGrid = GridFunc(row, col);
+		bombHashMap[i] = (new Circle(tempX, tempY, tempR, i, tempGrid));
+
+		auto curCircle = bombHashMap[i];
+		//기존의 점들이랑 겹치는것 체크
+		for (int j = leftDownGrid; j <= leftUpGrid; j += GRID_INTERVAL){
+			for (int k = 0; k <= (maxX - minX); ++k){
+				
+				list<int> & collisionGridList = gridBombHashMap[j + k];
+				
+				for (auto iter = collisionGridList.begin(); iter != collisionGridList.end(); ++iter){
+					auto obj1 = *iter;
+					auto circle1 = bombHashMap[obj1];
+					
+					if (IsCollision(circle1, curCircle)){
+						int min = Min(circle1->GetGroupNumber(), curCircle->GetGroupNumber());
+						circle1->SetGroupNumber(min);
+						curCircle->SetGroupNumber(min);
+					}
+				}
+			}
+		}
+
 		for (int j = leftDownGrid; j <= leftUpGrid; j += GRID_INTERVAL){
 			for (int k = 0; k <= (maxX - minX); ++k){
 				list<int> & collisionGridList = gridBombHashMap[j + k];
 				collisionGridList.push_back(i);
 			}
 		}
-
-		tempGrid = GridFunc(row, col);
-		bombHashMap[i] = (new Circle(tempX, tempY, tempR, i, tempGrid));
 	}
 	fclose(fin);
 }
-
-void FindBombNumber(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & gridBombHashMap){
-	stack<Circle *> explosionCircle;
-	set<int> alreadyExplodedBomb;
-	bool * checkBomb = new bool[5000001];
-
-	for (int i = 0; i < 5000001; ++i)
-		checkBomb[i] = false;
-
-	int res = 0;
-
-	for (int i = 0; i < 1000000; ++i){
-		list<int> & gridCurBombList = gridBombHashMap[i];
-		for (auto bombList = gridCurBombList.begin(); bombList != gridCurBombList.end(); ++bombList){
-
-		}
-	}
-
-// 	while (!bombHashMap.empty()){
-// 		Circle * curCicle;
-// 
-// 		if (explosionCircle.empty()){ //stack이 비어있으면, 현재 남은 폭탄에서 한개를 푸쉬해줌
-// 			++res;//폭탄 새로 터뜨려야함
-// 
-// 			auto iter = bombHashMap.begin();
-// 			auto obj = iter->second;
-// 			
-// 			bombHashMap.erase(iter);//현재 넣는 폭탄을 폭탄 리스트에서 제거해주어야함
-// 			curCicle = obj;
-// 
-// 			//alreadyExplodedBomb.insert(curCicle->GetId());//터진새키는 set에 넣어줌
-// 			checkBomb[obj->GetId()] = true; //얘는 지금 터뜨림.
-// 		} 
-// 		else{//추후 보정 필요(stack에서 바로 빼오는 경우)
-// 			auto obj = explosionCircle.top();
-// 			explosionCircle.pop();
-// 			curCicle = obj;
-// 		}
-// 		
-// 		int curGrid = curCicle->GetGridNumber();
-// 		list<int> & curGridList = gridBombHashMap[curGrid];
-// 
-// 		for (auto curGridCircle1 = curGridList.begin(); curGridCircle1 != curGridList.end(); ++curGridCircle1){
-// 			for (auto curGridCircle2 = curGridList.begin(); curGridCircle2 != curGridList.end(); ++curGridCircle2){
-// 				auto obj1 = *curGridCircle1;
-// 				auto obj2 = *curGridCircle2;
-// 
-// 				if (obj1 == obj2) continue; //ID 같으면 같은 새키니까 continue
-// 				if (checkBomb[obj1] || checkBomb[obj2]) continue; //이미 터진새키들인지 확인
-// 
-// 				auto circle1 = bombHashMap[obj1];
-// 				auto circle2 = bombHashMap[obj2];
-// 
-// 				if (IsCollision(circle1, circle2)){ //새로운 두새키 충돌하면
-// 					checkBomb[circle1->GetId()] = true;
-// 					checkBomb[circle2->GetId()] = true;
-// 
-// 					explosionCircle.push(circle1);
-// 					explosionCircle.push(circle2);
-// 				}
-// 			}
-// 		}
-// 		//delete curCicle; //현재 써먹은 폭탄은 터뜨렸으므로 이제 존재하지 않음.
-// 	}
-
-	printf("%d\n", res);
-}
-
-// void ReleaseMemory(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<Circle *>> & gridBombHashMap, vector<list<Circle *>*> & saveListPointer){
-// 	for (auto &i = bombHashMap.begin(); i != bombHashMap.end();){
-// 		auto iter = i;
-// 		if (i){
-// 			i = bombHashMap.erase(iter);
-// 			delete obj;
-// 		}
-// 	}
-// }
-
 int main(void){
 	clock_t start_time, end_time;
 	start_time = clock();
@@ -220,8 +172,6 @@ int main(void){
 	}
 
 	InputData(bombHashMap, gridBombHashMap);
-	FindBombNumber(bombHashMap, gridBombHashMap);
-	//ReleaseMemory(bombHashMap, gridBombHashMap, saveListPointer);
 
 	end_time = clock();
 	printf("Time : %f\n", ((double)(end_time - start_time)) / CLOCKS_PER_SEC);
