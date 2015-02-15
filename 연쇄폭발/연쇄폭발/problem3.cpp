@@ -100,11 +100,25 @@ void FindBombNumber(hash_map<int, Circle*> & bombHashMap, multimap<int, Circle*>
 
 		if (explosionCircle.empty()){ //stack이 비어있으면, 현재 남은 폭탄에서 한개를 푸쉬해줌
 			++res;//폭탄 한 번 더 터뜨려야함
+
 			auto iter = bombHashMap.begin();
 			auto obj = iter->second;
-			bombHashMap.erase(iter);
+			
+			bombHashMap.erase(iter);//현재 넣는 폭탄을 폭탄 리스트에서 제거해주어야함
 			explosionCircle.push(obj);
 			curCicle = obj;
+
+			int curGrid = obj->GetGridNumber(); //현재 스택에 넣는 폭탄을 그리드에서 제거해주어야함
+			auto curGridCircle = gridBombMultiMap.equal_range(curGrid);
+
+			for (auto bomb = curGridCircle.first; bomb != curGridCircle.second; ++bomb){
+				auto bombIter = bomb;
+				auto bombObj = bomb->second;
+				if (obj == bombObj){
+					
+				}
+			}
+
 		} 
 		else{
 			auto obj = explosionCircle.top();
