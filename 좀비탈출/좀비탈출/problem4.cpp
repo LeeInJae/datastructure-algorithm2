@@ -5,6 +5,7 @@
 using namespace std;
 
 #define INPUT_FILE_NAME "input.txt"
+#define OUTPUT_FILE_NAME "output.txt"
 
 void InputRope(vector<int> & ropeVector, int & makeCount, int & dataCount){
 	FILE * fin;
@@ -25,6 +26,10 @@ void InputRope(vector<int> & ropeVector, int & makeCount, int & dataCount){
 }
 
 void FindMaxRopeLength(vector<int> & ropeVector, int & makeCount, int & dataCount){
+	FILE * fout;
+	errno_t err;
+	err = fopen_s(&fout, OUTPUT_FILE_NAME, "w");
+
 	int left = 1;
 	int right = ropeVector[dataCount - 1];
 	int max = -1000000000;
@@ -46,7 +51,9 @@ void FindMaxRopeLength(vector<int> & ropeVector, int & makeCount, int & dataCoun
 	}
 
 	double res = (double)((double)max / (double)100);
-	printf("%.02lf\n",res);
+	fprintf(fout,"%.02lf\n",res);
+	printf("%.02lf\n", res);
+	fclose(fout);
 }
 
 int main(){

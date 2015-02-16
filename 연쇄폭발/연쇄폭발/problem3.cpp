@@ -6,6 +6,7 @@
 #include <map>
 #include <stack>
 #include <set>
+#include <array>
 
 using namespace std;
 
@@ -84,7 +85,7 @@ int GridFunc(int row, int col){
 	return row + col * GRID_INTERVAL;
 }
 
-void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & gridBombHashMap){
+void InputData(hash_map<int, Circle*> & bombHashMap, list<int> ** & gridBombHashMap){
 	FILE * fin;
 	errno_t err;
 	err = fopen_s(&fin, INPUT_FILE_NAME, "r");
@@ -107,31 +108,22 @@ void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & 
 		up.x = tempX, up.y = tempY + tempR;
 		down.x = tempX, down.y = tempY - tempR;
 		
-// 		int minX = left.x;
-// 		int maxX = right.x;
-// 		int minY = down.y;
-// 		int maxY = up.y;
-
-
 		int minX = left.x;
 		int maxX = right.x;
 		int minY = down.y;
 		int maxY = up.y;
 		
-		minX -= 1000;
-		maxX += 1000;
-		minY -= 1000;
-		maxY += 1000;
+		minX = minX / GRID_LENGTH;
+		maxX = maxX / GRID_LENGTH;
+		minY = minY / GRID_LENGTH;
+		maxY = maxY / GRID_LENGTH;
 
 		minX = Revision(minX);
 		minY = Revision(minY);
 		maxX = Revision(maxX);
 		maxY = Revision(maxY);
 
-		minX = minX / GRID_LENGTH;
-		maxX = maxX / GRID_LENGTH;
-		minY = minY / GRID_LENGTH;
-		maxY = maxY / GRID_LENGTH;
+		
 		
 		int leftDownGrid = GridFunc(minX, minY);
 		int leftUpGrid = GridFunc(minX, maxY);
@@ -182,18 +174,24 @@ void InputData(hash_map<int, Circle*> & bombHashMap, hash_map<int, list<int>> & 
 int main(void){
 	clock_t start_time, end_time;
 	start_time = clock();
-
 	hash_map<int, Circle*> bombHashMap; //id와 bomb
-	hash_map<int, list<int>> gridBombHashMap;
+	
+	list<int> ** gridBomb2dArray = new list<int> *[GRID_LENGTH];
+	for (int i = 0; i < GRID_LENGTH; ++i){
+		gridBomb2dArray[i] = new list<int>[GRID_LENGTH]; //해제 해줄것
+	}
+	
 	vector<list<int>*> saveListPointer; //여기있는놈 메모리 해제
 
-	for (int i = 0; i < 1000000; ++i){
-		list<int> * listArr = new list < int >;
-		saveListPointer.push_back(listArr);
-		gridBombHashMap.insert(hash_map < int, list<int> >::value_type(i, *listArr));
+	for (int i = 0; i < GRID_LENGTH; ++i){
+		for (int j = 0; j < GRID_LENGTH; ++j){
+			list<int> * listArr = new list < int > ;
+			saveListPointer.push_back(listArr);
+			gridBomb2dArray[i][j] = *listArr;
+		}
 	}
 
-	InputData(bombHashMap, gridBombHashMap);
+	InputData(bombHashMap, gridBomb2dArray);
 
 	end_time = clock();
 	printf("Time : %f\n", ((double)(end_time - start_time)) / CLOCKS_PER_SEC);
